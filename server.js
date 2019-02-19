@@ -98,25 +98,32 @@ var scrapeDataFromHtml = function (html) {
     var $ = cheerio.load(html);
     var j = 1;
     for (let index = 0; index < 20; index++) {
-        $(`div.views-row-${index}`).each(function () {
-            var a = $(this);
-            var fullNewsLink = a.children().children().attr("href");
-            var headline = a.children().first().text().trim();
-            var description = a.children().children().children().text();
+        
+            var a = $(`div.views-row-${j}`);
+            var htmlNodes = a.children().children().children();
+            var expiryDateTemp = htmlNodes.find('span');
+            var expiryDate = expiryDateTemp[0]?expiryDateTemp[0].attribs : '';
+
+            // var fullNewsLink = a.children().children().attr("href");
+            // var headline = a.children().first().text().trim();
+            // var description = a.children().children().children().text();
+            // var expiryDateTemp
+            // if (a.children().children().children().find('span').attr('class','date-display-single').contents()[0].hasOwnProperty('data')) {
+            //     expiryDateTemp = a.children().children().children().find('span').attr('class','date-display-single').contents()[0]
+            // } else {
+            //     expiryDateTemp = '';
+            // }
             var metadata = {
-                headline: headline,
-                description: description,
-                fullNewsLink : fullNewsLink,
-                linkUrl: a.children().children().children().children().find('a').attr('href'),
-                thumbnailUrl: a.children().children().children().children().find('img').attr('src'),
-                title: a.children('div').find('.title').text(),
                 brandName: '',
-                // expiryDate: 
+                linkUrl: htmlNodes.children().find('a').attr('href'),
+                thumbnailUrl: htmlNodes.children().find('img').attr('src'),
+                title: a.children('div').find('.title').text(),
+                expiryDate: expiryDate,
+                description: htmlNodes.text
             };
             data[j] = metadata;
             console.log(data)
             j++;
-        });
     }
    
     return data;
