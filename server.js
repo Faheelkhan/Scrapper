@@ -6,6 +6,7 @@ var app     = express();
 var router = express.Router()
 var path = require('path');
 var filePath = path.join(__dirname,'haha.html')
+const axios = require('axios')
 
 // app.get('/scrape', function(req, res){
 
@@ -93,7 +94,7 @@ var dealsSchema = {
     thumbnailUrl: '',
     title: ''
 }
-var scrapeDataFromHtml = function (html) {
+var scrapeDataFromHtml = async function (html) {
     var data = {};
     var $ = cheerio.load(html);
     var j = 1;
@@ -103,16 +104,7 @@ var scrapeDataFromHtml = function (html) {
             var htmlNodes = a.children().children().children();
             var expiryDateTemp = htmlNodes.find('span');
             var expiryDate = expiryDateTemp[0]?expiryDateTemp[0].attribs : '';
-
-            // var fullNewsLink = a.children().children().attr("href");
-            // var headline = a.children().first().text().trim();
-            // var description = a.children().children().children().text();
-            // var expiryDateTemp
-            // if (a.children().children().children().find('span').attr('class','date-display-single').contents()[0].hasOwnProperty('data')) {
-            //     expiryDateTemp = a.children().children().children().find('span').attr('class','date-display-single').contents()[0]
-            // } else {
-            //     expiryDateTemp = '';
-            // }
+            
             var metadata = {
                 brandName: '',
                 linkUrl: htmlNodes.children().find('a').attr('href'),
@@ -121,6 +113,8 @@ var scrapeDataFromHtml = function (html) {
                 expiryDate: expiryDate,
                 description: htmlNodes.text
             };
+            let mergerd = await getWebsiteContent(metadata.linkUrl)
+            metadata = { ...metadata , ...mergerd}
             data[j] = metadata;
             console.log(data)
             j++;
@@ -128,6 +122,42 @@ var scrapeDataFromHtml = function (html) {
    
     return data;
 };
+
+
+const getWebsiteContent = async (url) => {
+    url = `https://whatsonsale.com.pk${url}`
+    try {
+      const response = await axios.get(url)
+      const $ = cheerio.load(response.data)
+      let html = $(`.description .clearfix`);
+        
+      console.log(html);
+      var x = $(`.description`).find('p').children()
+      var sDateEdate = {
+        startDate: $('.date-display-single').html(),
+        expiryDate: $('.date-display-single').last().html()
+      }
+       console.log(sDateEdate)
+       return(sDateEdate)
+
+    } catch (error) {
+  
+      console.error(error)
+    }
+  }
+
+
 app.listen('8081')
 console.log('Magic happens on port 8081');
 exports = module.exports = app;
+
+
+// var fullNewsLink = a.children().children().attr("href");
+            // var headline = a.children().first().text().trim();
+            // var description = a.children().children().children().text();
+            // var expiryDateTemp
+            // if (a.children().children().children().find('span').attr('class','date-display-single').contents()[0].hasOwnProperty('data')) {
+            //     expiryDateTemp = a.children().children().children().find('span').attr('class','date-display-single').contents()[0]
+            // } else {
+            //     expiryDateTemp = '';
+            // }
