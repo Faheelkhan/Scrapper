@@ -110,7 +110,6 @@ var scrapeDataFromHtml = async function (html) {
                 linkUrl: htmlNodes.children().find('a').attr('href'),
                 thumbnailUrl: htmlNodes.children().find('img').attr('src'),
                 title: a.children('div').find('.title').text(),
-                expiryDate: expiryDate,
                 description: htmlNodes.text
             };
             let mergerd = await getWebsiteContent(metadata.linkUrl)
@@ -133,9 +132,18 @@ const getWebsiteContent = async (url) => {
         
       console.log(html);
       var x = $(`.description`).find('p').children()
+      var scrapedAllDescriptions =[]
+
+    $('.description').children().each(function(i, elem) {
+        scrapedAllDescriptions.push($(this).html());
+        });
+
       var sDateEdate = {
         startDate: $('.date-display-single').html(),
-        expiryDate: $('.date-display-single').last().html()
+        expiryDate: $('.date-display-single').last().html(),
+        location: `https:${scrapedAllDescriptions[2].match(/href="([^"]*)/)? scrapedAllDescriptions[2].match(/href="([^"]*)/)[1] : ''}` || '',
+        description: scrapedAllDescriptions[0],
+        // shipping: 
       }
        console.log(sDateEdate)
        return(sDateEdate)
@@ -150,14 +158,3 @@ const getWebsiteContent = async (url) => {
 app.listen('8081')
 console.log('Magic happens on port 8081');
 exports = module.exports = app;
-
-
-// var fullNewsLink = a.children().children().attr("href");
-            // var headline = a.children().first().text().trim();
-            // var description = a.children().children().children().text();
-            // var expiryDateTemp
-            // if (a.children().children().children().find('span').attr('class','date-display-single').contents()[0].hasOwnProperty('data')) {
-            //     expiryDateTemp = a.children().children().children().find('span').attr('class','date-display-single').contents()[0]
-            // } else {
-            //     expiryDateTemp = '';
-            // }
