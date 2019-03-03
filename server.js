@@ -8,61 +8,9 @@ var path = require('path');
 var filePath = path.join(__dirname,'haha.html')
 const axios = require('axios')
 
-// app.get('/scrape', function(req, res){
 
-// var arr = []
-// request(url, function(error, response, html){
-//     if(!error){
-//         var $ = cheerio.load(html);
 
-//     var title, release, rating;
-//     var json = { title : "", description : "", rating : ""};
-
-//     $('.views-row-1').filter(function(){
-//         var data = $(this);
-//         title = data.children().first().text();            
-//         release = data.children().last().children().text();
-
-//         json.title = data.children('div').find('.title').html();
-//         json.description = data.children('div').find('.description').html();
-//         data.children('div').find('.thumbnail').children().children().children().children().children().each( (index, value) => {
-//             var link = $(value).attr('src');
-//             json.image = link
-//          });
-//         arr.push(json)
-//     })
-// console.log(arr);
-//     $('.star-box-giga-star').filter(function(){
-//         var data = $(this);
-//         rating = data.text();
-
-//         json.rating = rating;
-//     })
-// }
-
-// // To write to the system we will use the built in 'fs' library.
-// // In this example we will pass 3 parameters to the writeFile function
-// // Parameter 1 :  output.json - this is what the created filename will be called
-// // Parameter 2 :  JSON.stringify(json, null, 4) - the data to write, here we do an extra step by calling JSON.stringify to make our JSON easier to read
-// // Parameter 3 :  callback function - a callback function to let us know the status of our function
-
-// fs.writeFile('output.json', JSON.stringify(json, null, 4), function(err){
-
-//     console.log('File successfully written! - Check your project directory for the output.json file');
-
-// })
-
-// // Finally, we'll just send out a message to the browser reminding you that this app does not have a UI.
-// res.send('Check your console!')
-
-//     }) ;
-// })
-
-// app.listen('8081')
-// console.log('Magic happens on port 8081');
-// exports = module.exports = app;
-
-var url = "file:///home/faheelkhan/Desktop/crawler/haha.html";
+var url = "https://whatsonsale.com.pk/";
 // router.get ('/', function (req, res) {
     request (url, function (error, response, body) {
         if (!error && response.statusCode === 200) {
@@ -98,7 +46,7 @@ var scrapeDataFromHtml = async function (html) {
     var data = {};
     var $ = cheerio.load(html);
     var j = 1;
-    for (let index = 0; index < 20; index++) {
+    for (let index = 0; index < 15; index++) {
         
             var a = $(`div.views-row-${j}`);
             var htmlNodes = a.children().children().children();
@@ -110,7 +58,8 @@ var scrapeDataFromHtml = async function (html) {
                 linkUrl: htmlNodes.children().find('a').attr('href'),
                 thumbnailUrl: htmlNodes.children().find('img').attr('src'),
                 title: a.children('div').find('.title').text(),
-                description: htmlNodes.text
+                description: htmlNodes.text,
+                id: index+1
             };
             let mergerd = await getWebsiteContent(metadata.linkUrl)
             metadata = { ...metadata , ...mergerd}
@@ -135,15 +84,19 @@ const getWebsiteContent = async (url) => {
       var scrapedAllDescriptions =[]
 
     $('.description').children().each(function(i, elem) {
-        scrapedAllDescriptions.push($(this).html());
-        });
+        if ($(this).text().substring(0, $(this).text().indexOf(":")) === 'Locations') {
+            scrapedAllDescriptions.push($(this).html());
+        } else {
+            scrapedAllDescriptions.push($(this).text());
+        }
+    });
 
       var sDateEdate = {
         startDate: $('.date-display-single').html(),
-        expiryDate: $('.date-display-single').last().html(),
-        location: `https:${scrapedAllDescriptions[2].match(/href="([^"]*)/)? scrapedAllDescriptions[2].match(/href="([^"]*)/)[1] : ''}` || '',
+        expiryDate: ($('.date-display-single').last().html() === $('.date-display-single').first().html())? '' : $('.date-display-single').last().html() ,
         description: scrapedAllDescriptions[0],
-        // shipping: 
+        ...( scrapedAllDescriptions[2].substring(0, scrapedAllDescriptions[2].indexOf(":")) === '<b>Locations'? {location: `https:${scrapedAllDescriptions[2].match(/href="([^"]*)/)? scrapedAllDescriptions[2].match(/href="([^"]*)/)[1] : ''}` || ''} : {shipping: scrapedAllDescriptions[2].substring(scrapedAllDescriptions[2].indexOf(':') + 1)}),
+        ...( scrapedAllDescriptions[2].substring(0, scrapedAllDescriptions[2].indexOf(":")) === 'Shipping & Delivery'? {shipping: scrapedAllDescriptions[2].substring(scrapedAllDescriptions[2].indexOf(':') + 1)} : '' )
       }
        console.log(sDateEdate)
        return(sDateEdate)
